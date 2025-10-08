@@ -1,0 +1,62 @@
+import telebot
+import random
+
+TOKEN = ''
+bot = telebot.TeleBot(TOKEN)
+
+class MyException(Exception):
+    pass
+
+
+@bot.message_handler(commands = ['hello'])
+def say_hello(message):
+    bot.send_message(message.chat.id,  'Привет!')
+users_info ={}
+
+@bot.message_handler(commands = ['start'])
+def say_hello(message):
+    bot.send_message(message.chat.id,  'Поехали! Угадай число. Напиши Начать')
+
+@bot.message_handler(commands = ['help'])
+def say_hello(message):
+    bot.send_message(message.chat.id,  'Чем тебе помочь? Ничем? Ну и иди гуляй!')
+
+
+
+@bot.message_handler(content_types = ['text'])
+def handle_message(message):
+    user_id = message.chat.id
+    txt = message.text.strip().lower()
+    
+    if txt == 'начать':
+        n = random.randint(1,100)
+        users_info[user_id] ={
+            'number': n,
+            'tries': 0}
+        bot.send_message(user_id,  'Я загадал число, начинай')
+    else:
+        try:
+            n = int(txt)
+            
+                
+            users_info[user_id]['tries'] += 1
+            x = users_info[user_id]['number']
+            if n == x:
+                bot.send_message(user_id,  'Ты угадал')
+            elif n < x:
+                bot.send_message(user_id,  'Число больше')
+            elif n > x:
+                bot.send_message(user_id,  'Число меньше')
+                
+        except ValueError:
+            bot.send_message(user_id,  'Из всех слов я понмаю только слово - начать. Служу трудовому народу!')
+        except MyException:
+            bot.send_message(user_id,  me)
+
+
+
+print('')
+bot.polling(
+    none_stop = True,
+    interval = 1
+    )
