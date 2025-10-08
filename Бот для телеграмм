@@ -1,0 +1,41 @@
+import telebot
+
+
+bot = telebot.TeleBot(TOKEN)
+
+"""@bot.message_handler(content_types = ['text'])
+def handle_message(message):
+    bot.send_message(message.chat.id, message.text)"""
+
+
+@bot.message_handler(commands = ['hello'])
+def say_hello(message):
+    bot.send_message(message.chat.id,  'Привет!')
+
+@bot.message_handler(commands = ['start'])
+def say_hello(message):
+    bot.send_message(message.chat.id,  'Поехали!')
+
+@bot.message_handler(commands = ['help'])
+def say_hello(message):
+    bot.send_message(message.chat.id,  'Чем тебе помочь?')
+
+"""@bot.message_handler(content_types = ['text'])
+def handle_message(message):
+    txt = message.txt
+    if txt.isdigit():
+        bot.send_message(message.chat.id, 'Вы отправили число')
+    else:
+        bot.send_message(message.chat.id, 'пиши циферками')"""
+
+@bot.message_handler(content_types = ['text'])
+def handle_message(message):
+    bot.send_message(message.chat.id,  'Я тружусь на благо трудового народа!')
+
+
+
+print('')
+bot.polling(
+    none_stop = True,
+    interval = 1
+    )
