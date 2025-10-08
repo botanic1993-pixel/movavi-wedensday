@@ -1,0 +1,37 @@
+import telebot
+import random
+
+
+bot = telebot.TeleBot(TOKEN)
+
+class MyException(Exception):
+    pass
+
+
+@bot.message_handler(commands = ['hello'])
+def say_hello(message):
+    bot.send_message(message.chat.id,  'Привет!')
+users_info ={}
+
+@bot.message_handler(commands = ['start'])
+def say_hello(message):
+    bot.send_message(message.chat.id,  'Привет ✔')
+bot.message_handler(commands = ['help'])
+def say_hello(message):
+    bot.send_message(message.chat.id,  'Чем тебе помочь? Ничем? Ну и иди гуляй!')
+    
+
+
+@bot.message_handler(content_types = ['text'])
+def handle_message(message):
+    try:
+        res = eval(message.text)
+        bot.send_message(message.chat.id,  f'Результат {res}')
+    except Exception as ex:
+        bot.send_message(message.chat.id, f'Ошибка: {ex}')
+        
+print('')
+bot.polling(
+    none_stop = True,
+    interval = 1
+    )
