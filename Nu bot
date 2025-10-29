@@ -1,0 +1,127 @@
+import telebot
+TOKEN = 
+
+bot = telebot.TeleBot(TOKEN)
+
+teachers = {
+    'Гумиров Тимур Фанильевич': {
+        'photo': 'https://i.vuzopedia.ru/storage/app/uploads/public/66f/28b/304/66f28b3041dad117782889.jpg', 
+        'courses': 'Обществознание',
+        'likes': 0,
+        'dislikes': 0,
+        'voted': []
+    },
+    'Трушина Екатерина Константиновна': {
+        'photo': 'https://data3.proshkolu.ru/content/media/pic/std/3000000/2198000/2197429-ddac300c0d8cdefa.jpg',
+        'courses': 'Алгебра',
+        'likes': 0,
+        'dislikes': 0,
+        'voted': []
+    },
+    'Каретников Михаил Анатольевич': {
+        'photo': 'https://sun9-67.userapi.com/impf/c9711/u93764645/d_bc16d9c6.jpg?quality=96&as=32x32,48x48,72x72&sign=0c8269548c5ac9b0c4be68b6527a075c&u=souWp5yvbJ76Jnp9Wd3BrRx4ssVcql88XE2QGTrTvu0&cs=200x200',
+        'courses': 'ОБЖ',
+        'likes': 0,
+        'dislikes': 0,
+        'voted': []
+    },
+    'Дунцова Любовь Михайловна': {
+        'photo': 'https://cdn.needspec.ru/foto/specialisty/repetitory/nsk/duncova-ljubov-mihayilovna/duncova-ljubov-mihayilovna_120x160.jpg',
+        'courses': 'Иностранные языки',
+        'likes': 0,
+        'dislikes': 0,
+        'voted': []
+    },
+    'Бахарева Марина Сергеевна': {
+        'photo': 'https://data3.proshkolu.ru/content/media/pic/std/3000000/2040000/2039097-6f4a69aad76b04d5.jpg',
+        'courses': ' Черчение',
+        'likes': 0,
+        'dislikes': 0,
+        'voted': []
+    },
+    
+    'Гамаюнова Татьяна Владимировна': {
+        'photo': 'https://nsk.repetitory.online/upload/iblock/19c/19c17bd56c0aece740d06e2c0d6561c6.jpg',
+        'courses': ' ИЗО',
+        'likes': 0,
+        'dislikes': 0,
+        'voted': []
+    }
+}
+
+courses = {
+    'Обществознание': ['Гумиров Тимур Фанильевич'],
+    'Алгебра': ['Трушина Екатерина Константиновна'],
+    'ОБЖ': ['Каретников Михаил Анатольевич'],
+    'Иностранные языки': ['Дунцова Любовь Михайловна'],
+    'Черчение': ['Бахарева Марина Сергеевна'],
+    'ИЗО': ['Гамаюнова Татьяна Владимировна']
+}
+
+@bot.message_handler(commands=['start'])
+def start_message(message):
+    keyboard = telebot.types.InlineKeyboardMarkup()
+    evaluate = telebot.types.InlineKeyboardButton('Оценить преподавателя', callback_data='evaluate')
+    rating = telebot.types.InlineKeyboardButton('Рейтинг преподавателей', callback_data='rating')
+    keyboard.add(evaluate)
+    keyboard.add(rating)
+    bot.send_message(message.chat.id, 'Выберите одно из действий:', reply_markup=keyboard)
+
+@bot.callback_query_handler(lambda callback: True)
+def func(callback):
+    user_id = callback.message.chat.id
+    data = callback.data
+    if data == 'evaluate':
+        keyboard  = telebot.types.InlineKeyboardMarkup()
+        for course in courses.keys():
+            keyboard.add(telebot.types.InlineKeyboardButton(course, callback_data = course))
+        bot.send_message(user_id, 'Выберите курс: ', reply_markup = keyboard)
+    elif data in courses:
+        keyboard  = telebot.types.InlineKeyboardMarkup()
+        for teacher in courses[data]:
+            keyboard.add(telebot.types.InlineKeyboardButton(teacher, callback_data = teacher))
+        bot.send_message(user_id, 'Выберите предподавателя: ', reply_markup = keyboard)
+    elif data in teachers:
+        info = (
+            f'Имя предподавателя: {data}\n'
+            f'Какие курсы предподает: {teachers[data]["courses"]}\n'
+            f'Лайков: {teachers[data]["likes"]}, Дизлайков: {teachers[data]["dislikes"]}'
+        )
+        keyboard  = telebot.types.InlineKeyboardMarkup()
+        like = telebot.types.InlineKeyboardButton('👍', callback_data = f'like_{data}')
+        dislike = telebot.types.InlineKeyboardButton('👎', callback_data = f'dislike_{data}')
+        keyboard.add(like, dislike)
+        bot.send_photo(user_id, teachers[data]['photo'])
+        bot.send_message(user_id, info, reply_markup=keyboard)
+    elif data.startswith('like'):
+        name = data.split('_')[1]
+        if user_id in teachers[name]['voted']:
+            bot.send_message(user_id, 'Вы уже голосовали за этого предподавателя')
+        else:
+            teachers[name]['likes']+=1
+            teachers[name]['voted'].append(user_id)
+            bot.send_message(user_id, 'Ваш голос записан')
+    elif data.startswith('dislike'):
+        name = data.split('_')[1]
+        if user_id in teachers[name]['voted']:
+            bot.send_message(user_id, 'Вы уже голосовали за этого предподавателя')
+        else:
+            teachers[name]['dislikes']+=1
+            teachers[name]['voted'].append(user_id)
+            bot.send_message(user_id, 'Ваш голос записан')
+    elif data == 'rating':
+        rating = []
+        for name, info in teachers.items():
+            votes = info['likes'] + info['dislikes']
+            rating.append((name, (info['likes'] - info['dislikes']) / votes))
+        rating.sort(key=lambda x: -x[1])
+        result = 'ТОП-3 преподавателя АКЛ:\n\n'
+        for i, teacher in enumerate(rating[:3]):
+            result += f'№{i + 1}: {teacher[0]} ({teacher[1]:.2f})\n'
+        bot.send_message(user_id, result)
+
+print('')
+bot.polling(
+    none_stop=True,
+    interval=1
+)
